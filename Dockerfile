@@ -1,5 +1,8 @@
 FROM php:8.2-apache
 
+# Copy composer from official composer image
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 RUN apt-get update && apt-get install -y \
     libssl-dev \
     libzip-dev \
