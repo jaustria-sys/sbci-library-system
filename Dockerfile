@@ -1,6 +1,5 @@
 FROM php:8.2-apache
 
-# Copy composer from official composer image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update && apt-get install -y \
@@ -9,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
+    pkg-config \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
     && docker-php-ext-install zip \
@@ -18,7 +18,7 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-req=ext-mongodb
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
