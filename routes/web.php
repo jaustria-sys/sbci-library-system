@@ -24,7 +24,9 @@ Route::get('/final-setup', function () {
         ['title' => 'Biology', 'author' => 'Science', 'isbn' => '978971100109', 'category' => 'Science', 'quantity' => 7, 'status' => 'Available'],
         ['title' => 'World History', 'author' => 'Library', 'isbn' => '978971100110', 'category' => 'History', 'quantity' => 9, 'status' => 'Available'],
     ];
-    foreach ($books as $b) { Book::create($b); }
+    foreach ($books as $b) {
+        Book::create($b);
+    }
     \App\Models\User::create([
         'name' => 'Admin SBCI',
         'email' => 'admin@sbci.edu',
@@ -49,7 +51,7 @@ Route::get('/fix-role', function () {
     return "AYOS NA! Admin = admin, Student = borrower.<br><a href='/books'>Punta ka na sa /books</a> - Dapat may ADD na!";
 });
 
-// ANALYTICS DASHBOARD - PANG 20% POINTS!
+// ANALYTICS DASHBOARD
 Route::get('/dashboard', function () {
     $total = Book::count();
     $available = Book::where('status', 'Available')->count();
@@ -81,10 +83,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     Route::resource('books', BookController::class);
-    // BORROW SYSTEM - BAGONG DAGDAG
+
+    // BORROW SYSTEM
     Route::post('/books/{id}/borrow', [BookController::class, 'borrow'])->name('books.borrow');
     Route::get('/borrowed', [BookController::class, 'borrowedList'])->name('books.borrowed');
+    // RETURN SYSTEM - BAGONG DAGDAG
+    Route::post('/borrowed/{id}/return', [BookController::class, 'returnBook'])->name('books.return');
 });
 
 require __DIR__.'/auth.php';

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\Borrow;
 use Illuminate\Http\Request;
 
 class BookController extends Controller
@@ -69,18 +70,15 @@ class BookController extends Controller
     public function borrow($id)
     {
         $book = Book::findOrFail($id);
-        
         if($book->quantity < 1) {
             return back()->with('error', 'No more copies available!');
         }
-
         $book->decrement('quantity');
         if($book->quantity == 0) {
             $book->status = 'Not Available';
             $book->save();
         }
-
-        \App\Models\Borrow::create([
+        Borrow::create([
             'book_id' => $book->_id ?? $book->id,
             'book_title' => $book->title,
             'user_id' => auth()->id(),
@@ -90,13 +88,43 @@ class BookController extends Controller
             'borrowed_at' => now(),
             'return_date' => now()->addDays(7),
         ]);
-
         return back()->with('success', 'Successfully borrowed: ' . $book->title . ' - Please return in 7 days!');
     }
 
     public function borrowedList()
     {
-        $borrows = \App\Models\Borrow::orderBy('borrowed_at', 'desc')->get();
+        $borrows = Borrow::orderBy('borrowed_at', 'desc')->get();
         return view('books.borrowed', compact('borrows'));
+    }
+
+    // RETURN BOOK - BAGONG DAGDAG
+    public function returnBook($id)
+    {
+        $borrow = Borrow::find($id);
+        if (!$borrow) {
+            return back()->with('error', 'Record not found!');
+        }
+
+        if ($borrow->status == 'Returned') {
+            return back()->with('error', 'Already returned!');
+        }
+
+        // +1 quantity back sa book
+        $book = Book::find($borrow->book_id);
+        if ($book) {
+            $book->increment('quantity');
+            // Kung naging Available ulit
+            if ($book->quantity > 0 && $book->status == 'Not Available') {
+                $book->status = 'Available';
+                $book->save();
+            }
+        }
+
+        // Mark as returned
+        $borrow->status = 'Returned';
+        $borrow->returned_at = now();
+        $borrow->save();
+
+        return back()->with('success', 'Book returned: ' . $borrow->book_title);
     }
 }
