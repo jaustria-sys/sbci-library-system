@@ -10,17 +10,15 @@ class BookController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-
         if ($search) {
             $books = Book::where('title', 'like', "%{$search}%")
-                        ->orWhere('author', 'like', "%{$search}%")
-                        ->orWhere('category', 'like', "%{$search}%")
-                        ->orWhere('isbn', 'like', "%{$search}%")
-                        ->get();
+                ->orWhere('author', 'like', "%{$search}%")
+                ->orWhere('category', 'like', "%{$search}%")
+                ->orWhere('isbn', 'like', "%{$search}%")
+                ->get();
         } else {
             $books = Book::all();
         }
-
         return view('books.index', compact('books'));
     }
 
@@ -39,7 +37,6 @@ class BookController extends Controller
             'quantity' => 'required|integer',
             'status' => 'required'
         ]);
-
         Book::create($request->all());
         return redirect()->route('books.index')->with('success','Book added!');
     }
@@ -59,7 +56,6 @@ class BookController extends Controller
             'quantity' => 'required|integer',
             'status' => 'required'
         ]);
-
         $book->update($request->all());
         return redirect()->route('books.index')->with('success','Book updated!');
     }
@@ -68,5 +64,39 @@ class BookController extends Controller
     {
         $book->delete();
         return redirect()->route('books.index')->with('success','Book deleted!');
+    }
+
+    public function borrow($id)
+    {
+        $book = Book::findOrFail($id);
+        
+        if($book->quantity < 1) {
+            return back()->with('error', 'No more copies available!');
+        }
+
+        $book->decrement('quantity');
+        if($book->quantity == 0) {
+            $book->status = 'Not Available';
+            $book->save();
+        }
+
+        \App\Models\Borrow::create([
+            'book_id' => $book->_id ?? $book->id,
+            'book_title' => $book->title,
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()->name,
+            'user_email' => auth()->user()->email,
+            'status' => 'Borrowed',
+            'borrowed_at' => now(),
+            'return_date' => now()->addDays(7),
+        ]);
+
+        return back()->with('success', 'Successfully borrowed: ' . $book->title . ' - Please return in 7 days!');
+    }
+
+    public function borrowedList()
+    {
+        $borrows = \App\Models\Borrow::orderBy('borrowed_at', 'desc')->get();
+        return view('books.borrowed', compact('borrows'));
     }
 }

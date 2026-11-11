@@ -13,6 +13,18 @@
     <div class="py-8 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
+            {{-- SUCCESS / ERROR MESSAGE PAG NAG-BORROW --}}
+            @if(session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4 font-bold">
+                    ✅ {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 font-bold">
+                    ❌ {{ session('error') }}
+                </div>
+            @endif
+
             <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-t-4 border-[#0B2C6F]">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
@@ -20,21 +32,24 @@
                         <p class="text-gray-500 text-sm">Manage all SBCI books - Powered by MongoDB Atlas</p>
                     </div>
                     @if(auth()->user()->role == 'admin')
-                        <a href="{{ route('books.create') }}" class="bg-[#0B2C6F] hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-lg shadow-lg">
-                            + Add New Book (Admin)
-                        </a>
+                        <div class="flex gap-2">
+                            <a href="{{ route('books.borrowed') }}" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-lg shadow-lg">
+                                📋 View Borrowed Books
+                            </a>
+                            <a href="{{ route('books.create') }}" class="bg-[#0B2C6F] hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-lg shadow-lg">
+                                + Add New Book (Admin)
+                            </a>
+                        </div>
                     @else
                         <span class="bg-green-100 text-green-700 font-bold px-6 py-3 rounded-lg">👋 Welcome Borrower! View & Borrow Only</span>
                     @endif
                 </div>
             </div>
 
-            <!-- SEARCH BOX - BAGONG DAGDAG -->
+            <!-- SEARCH BOX -->
             <div class="bg-white rounded-xl shadow-lg p-4 mb-6 flex flex-col md:flex-row gap-3">
                 <form method="GET" action="{{ route('books.index') }}" class="flex flex-1 gap-3 w-full">
-                    <input type="text" name="search" placeholder="🔍 Search title, author, category, ISBN..." 
-                           value="{{ request('search') }}"
-                           class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0B2C6F]">
+                    <input type="text" name="search" placeholder="🔍 Search title, author, category, ISBN..." value="{{ request('search') }}" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0B2C6F]">
                     <button type="submit" class="bg-[#0B2C6F] hover:bg-blue-800 text-white font-bold px-6 py-2 rounded-lg">Search</button>
                     @if(request('search'))
                         <a href="{{ route('books.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-6 py-2 rounded-lg flex items-center">Clear</a>
@@ -85,7 +100,15 @@
                                             <button class="bg-red-600 text-white font-bold px-3 py-1 rounded">Delete</button>
                                         </form>
                                     @else
-                                        <button class="bg-green-600 text-white font-bold px-4 py-1 rounded">Borrow</button>
+                                        {{-- BORROW BUTTON - GUMAGANA NA! --}}
+                                        @if($book->quantity > 0)
+                                            <form action="{{ route('books.borrow', $book->_id ?? $book->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-1 rounded">Borrow</button>
+                                            </form>
+                                        @else
+                                            <span class="bg-gray-200 text-gray-500 font-bold px-4 py-1 rounded">Out of Stock</span>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>
