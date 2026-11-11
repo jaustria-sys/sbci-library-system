@@ -12,23 +12,41 @@
 
     <div class="py-8 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
             <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-t-4 border-[#0B2C6F]">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-xl font-bold text-[#0B2C6F]">Library Book Management</h3>
                         <p class="text-gray-500 text-sm">Manage all SBCI books - Powered by MongoDB Atlas</p>
                     </div>
-                    
                     @if(auth()->user()->role == 'admin')
-                    <a href="{{ route('books.create') }}" class="bg-[#0B2C6F] hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-lg shadow-lg">
-                        + Add New Book (Admin)
-                    </a>
+                        <a href="{{ route('books.create') }}" class="bg-[#0B2C6F] hover:bg-blue-800 text-white font-bold px-6 py-3 rounded-lg shadow-lg">
+                            + Add New Book (Admin)
+                        </a>
                     @else
-                    <span class="bg-green-100 text-green-700 font-bold px-6 py-3 rounded-lg">👋 Welcome Borrower! View & Borrow Only</span>
+                        <span class="bg-green-100 text-green-700 font-bold px-6 py-3 rounded-lg">👋 Welcome Borrower! View & Borrow Only</span>
                     @endif
-
                 </div>
             </div>
+
+            <!-- SEARCH BOX - BAGONG DAGDAG -->
+            <div class="bg-white rounded-xl shadow-lg p-4 mb-6 flex flex-col md:flex-row gap-3">
+                <form method="GET" action="{{ route('books.index') }}" class="flex flex-1 gap-3 w-full">
+                    <input type="text" name="search" placeholder="🔍 Search title, author, category, ISBN..." 
+                           value="{{ request('search') }}"
+                           class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0B2C6F]">
+                    <button type="submit" class="bg-[#0B2C6F] hover:bg-blue-800 text-white font-bold px-6 py-2 rounded-lg">Search</button>
+                    @if(request('search'))
+                        <a href="{{ route('books.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-6 py-2 rounded-lg flex items-center">Clear</a>
+                    @endif
+                </form>
+            </div>
+
+            @if(request('search'))
+                <div class="mb-4 text-sm text-gray-600">
+                    Showing results for: <b>"{{ request('search') }}"</b> - {{ $books->count() }} found
+                </div>
+            @endif
 
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div class="overflow-x-auto">
@@ -72,12 +90,13 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="7" class="p-8 text-center text-gray-400">No books yet.</td></tr>
+                            <tr><td colspan="7" class="p-8 text-center text-gray-400">No books found for "{{ request('search') }}".</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
+
         </div>
     </div>
 </x-app-layout>
